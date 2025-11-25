@@ -64,10 +64,9 @@ export function updateStats(personCount, faceCount, personBoxes, faceBoxes) {
     faceCountElement.textContent = faceCount;
 
     // Update emotion stats
-    updateEmotionStats(faceBoxes);
+
 
     // Update action stats
-    updateActionStats(personBoxes);
 
     // Update detected people list
     updateDetectedPeopleList(personBoxes, faceBoxes); // Add this line

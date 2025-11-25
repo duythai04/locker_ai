@@ -12,10 +12,8 @@ model.export('saved_model_format')
 converter = tf.lite.TFLiteConverter.from_saved_model('saved_model_format')
 
 # 3. Bật cả built‑in ops và TF Select ops
-converter.target_spec.supported_ops = [
-    tf.lite.OpsSet.TFLITE_BUILTINS,    # các op chuẩn TFLite
-    tf.lite.OpsSet.SELECT_TF_OPS       # cho phép dùng Flex ops
-]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
+
 
 # Bật FP16 quantization cho các weight và operation bên trong
 converter.optimizations = [tf.lite.Optimize.DEFAULT]

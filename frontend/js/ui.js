@@ -88,13 +88,13 @@ export function setupEventListeners() {
     });
     
     // Thêm xử lý sự kiện cho hiển thị cảm xúc / Add emotion toggle event listener
-    toggleEmotions.addEventListener('change', () => {
-        config.showEmotions = toggleEmotions.checked;
-        if (state.isRunning) {
-            // Redraw immediately with new settings
-            drawDetections(state.personBoxes, state.faceBoxes);
-        }
-    });
+    // toggleEmotions.addEventListener('change', () => {
+    //     config.showEmotions = toggleEmotions.checked;
+    //     if (state.isRunning) {
+    //         // Redraw immediately with new settings
+    //         drawDetections(state.personBoxes, state.faceBoxes);
+    //     }
+    // });
 
     // Thêm xử lý sự kiện cho hiển thị hành vi / Add action toggle event listener
     toggleActions.addEventListener('change', () => {

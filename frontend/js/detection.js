@@ -229,18 +229,18 @@ export function drawDetections(personBoxes, faceBoxes) {
             }
             
             // Add emotion if enabled and available
-            if (config.showEmotions && box.emotion) {
-                labelParts.push(box.emotion);
+            // if (config.showEmotions && box.emotion) {
+            //     labelParts.push(box.emotion);
                 
-                // Use emotion-specific color if available
-                if (config.emotionColors[box.emotion]) {
-                    ctx.fillStyle = config.emotionColors[box.emotion];
-                } else {
-                    ctx.fillStyle = config.emotionColor;
-                }
-            } else {
-                ctx.fillStyle = config.faceColor; // Default color for face box if no emotion or emotion not shown
-            }
+            //     // Use emotion-specific color if available
+            //     if (config.emotionColors[box.emotion]) {
+            //         ctx.fillStyle = config.emotionColors[box.emotion];
+            //     } else {
+            //         ctx.fillStyle = config.emotionColor;
+            //     }
+            // } else {
+            //     ctx.fillStyle = config.faceColor; // Default color for face box if no emotion or emotion not shown
+            // }
 
             // Add similar face names if enabled and available
             if (config.showFaceNames) {
