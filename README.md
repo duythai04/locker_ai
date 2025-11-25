@@ -1,54 +1,98 @@
-# Hệ thống Nhận diện Người & Khuôn Mặt
+🚀 Smart Locker System using Facial Recognition
+Mở tủ thông minh sử dụng nhận diện khuôn mặt (FastAPI + YOLO + TFLite)
 
-## 1. Tổng quan hệ thống
+Hệ thống Smart Locker cho phép người dùng đăng ký khuôn mặt và mở tủ chỉ bằng việc đứng trước camera. Backend sử dụng FastAPI + mô hình AI để phát hiện khuôn mặt, tính toán embedding và so khớp với dữ liệu trong MongoDB. Frontend là web đơn giản hỗ trợ camera trực tiếp.
 
-Hệ thống Nhận diện Người & Khuôn Mặt là ứng dụng web thời gian thực sử dụng các mô hình YOLO (You Only Look Once) và TensorFlow để phát hiện người, khuôn mặt và nhận diện cảm xúc trên khuôn mặt từ camera. Hệ thống được thiết kế để hoạt động trên cả máy tính để bàn và thiết bị di động với giao diện thích ứng.
+1. 🎯 Mục tiêu hệ thống
 
-### 1.1. Chức năng chính
+Đăng ký khuôn mặt của người dùng (Enroll Face)
 
-- Phát hiện người trong khung hình video theo thời gian thực
-- Phát hiện khuôn mặt trong các vùng chứa người
-- Nhận diện cảm xúc trên khuôn mặt (7 loại cảm xúc cơ bản)
-- Hiển thị thống kê về số lượng người, khuôn mặt và phân bố cảm xúc
-- Tùy chỉnh hiển thị các phần tử trên giao diện
+Kiểm tra trùng khuôn mặt khi đăng ký (nếu similarity > 95% → báo trùng)
 
-### 1.2. Công nghệ sử dụng
+Nhận diện khuôn mặt để mở tủ (Unlock Locker)
 
-- **Backend**: FastAPI (Python), YOLO, TensorFlow
-- **Frontend**: HTML, CSS, JavaScript (vanilla)
-- **Mô hình AI**: YOLOv8n với cấu trúc các lớp được cắt giảm, tùy chỉnh tương ứng với các tác vụ nhận diện người hay khuôn mặt; mô hình cảm xúc, hành vi TFLite
+Hiển thị trạng thái hệ thống theo thời gian thực
 
-## 2. Kiến trúc hệ thống
+Xử lý AI trên backend (YOLO + Face Recognition)
 
-### 2.1. Sơ đồ kiến trúc
+Lưu embedding khuôn mặt vào MongoDB
 
-```
-┌────────────────┐     ┌───────────────────┐     ┌────────────────┐
-│                │     │                   │     │                │
-│  Web Frontend  │◄───►│  FastAPI Backend  │◄───►│  AI Models     │
-│  (HTML/JS/CSS) │     │  (Python)         │     │  (YOLO/TFLite) │
-│                │     │                   │     │                │
-└────────────────┘     └───────────────────┘     └────────────────┘
-```
+2. 🧠 Công nghệ sử dụng
+Backend
 
-### 2.2. Luồng dữ liệu
+FastAPI
 
-1. Người dùng mở ứng dụng web và cho phép truy cập camera
-2. Frontend chụp ảnh từ camera và gửi đến backend qua API
-3. Backend sử dụng các mô hình AI để phát hiện người, khuôn mặt và cảm xúc
-4. Backend trả về kết quả dưới dạng JSON
-5. Frontend hiển thị kết quả lên giao diện người dùng
+Uvicorn
 
-## 3. Các thành phần hệ thống
+OpenCV
 
-### 3.1. Frontend
+TensorFlow Lite (Face Embedding Model)
 
-#### 3.1.1. Cấu trúc thư mục
+YOLO (face detection)
 
-```
-frontend/
-├── index.html         # Trang chính của ứng dụng
-├── css/               # Các file CSS
+MongoDB Atlas (lưu embedding)
+
+python-dotenv
+
+Frontend
+
+HTML / CSS / JavaScript
+
+WebRTC Camera API
+
+Fetch API (gửi frame → backend)
+
+3. 🏗 Kiến trúc hệ thống
+┌────────────────┐      ┌──────────────────┐      ┌────────────────┐
+│ Frontend (Web) │◄────►│   FastAPI API    │◄────►│  AI Models     │
+│  Camera/WebRTC │      │  Face Processing │      │ YOLO + TFLite  │
+└────────────────┘      └──────────────────┘      └────────────────┘
+                             │
+                             ▼
+                      MongoDB Atlas
+               (Lưu embedding khuôn mặt)
+
+4. 🔄 Luồng hoạt động
+4.1. Đăng ký khuôn mặt
+
+Người dùng đứng trước camera → nhấn Đăng ký
+
+Frontend gửi ảnh qua API /enroll_face
+
+Backend:
+
+Phát hiện khuôn mặt bằng YOLO
+
+Tạo vector embedding
+
+So sánh với database (nếu similarity > 95% → báo trùng)
+
+Nếu không trùng → lưu embedding + user_id vào MongoDB
+
+4.2. Mở tủ bằng khuôn mặt
+
+Người dùng đứng trước camera → nhấn Mở tủ
+
+Backend:
+
+Phát hiện khuôn mặt
+
+So khớp với embeddings trong DB
+
+Nếu similarity >= 95% → mở tủ
+
+Nếu không → báo lỗi
+
+5. 📂 Cấu trúc thư mục
+project/
+│
+├── backend/
+│   ├── main.py
+│   ├── db_utils.py
+│
+├── frontend
+├   index.html         # Trang chính của ứng dụng
+├   css/               # Các file CSS
 │   ├── style.css      # CSS chính (nhập khẩu các file CSS khác)
 │   ├── base.css       # Biến và kiểu cơ bản
 │   ├── layout.css     # Layout chính và responsive
@@ -68,206 +112,120 @@ frontend/
     ├── ui.js          # Xử lý giao diện người dùng
     ├── state.js       # Quản lý trạng thái ứng dụng
     └── config.js      # Cấu hình ứng dụng
-```
+├── .env.example
+└── README.md
 
-#### 3.1.2. Các thành phần chính
+6. ⚙️ Cài đặt & chạy hệ thống
+6.1. Clone project
+git clone <your-repo>
+cd lock-detect-ai
 
-- **Camera**: Quản lý việc bắt đầu, dừng và chọn camera
-- **Detection**: Gửi khung hình đến backend và xử lý kết quả
-- **Stats**: Hiển thị thống kê về người, khuôn mặt và cảm xúc
-- **UI**: Quản lý giao diện người dùng và tương tác
-- **State**: Lưu trữ trạng thái ứng dụng
+6.2. Tạo môi trường
+python -m venv venv311
+source venv311/Scripts/activate
 
-### 3.2. Backend
+6.3. Cài dependency
+pip install -r requirements.txt
 
-#### 3.2.1. Cấu trúc thư mục
+6.4. Tạo file .env
 
-```
-app/
-├── __init__.py
-├── box_detector.py    # Xử lý nhận diện người và khuôn mặt
-├── config.py          # Cấu hình backend
-└── models.py          # Quản lý mô hình AI
+Tạo file .env:
 
-backend/
-└── main.py            # Máy chủ FastAPI chính
+MONGODB_URI=your_mongodb_uri
+MONGODB_DB_NAME=face_recognition_db
+MONGODB_FACE_COLLECTION=faces
 
-models/
-├── yolo11n.pt         # Mô hình YOLO nhận diện người
-├── best_face_model.pt # Mô hình nhận diện khuôn mặt
-└── emotion_model.tflite # Mô hình nhận diện cảm xúc
-```
-
-#### 3.2.2. Các thành phần chính
-
-- **FastAPI Server**: Xử lý các yêu cầu từ frontend
-- **Detector**: Phát hiện người và khuôn mặt trong khung hình
-- **Emotion Recognition**: Nhận diện cảm xúc từ khuôn mặt đã phát hiện
-
-## 4. Cài đặt và cấu hình
-
-### 4.1. Yêu cầu hệ thống
-
-- Python 3.10+
-- Thư viện Python: FastAPI, Uvicorn, TensorFlow, OpenCV, Ultralytics (YOLO)
-- Trình duyệt web hiện đại (Chrome, Firefox, Edge, Safari) có hỗ trợ WebRTC
-
-### 4.2. Cài đặt
-
-1. Clone mã nguồn từ kho lưu trữ:
-   ```
-   git clone https://github.com/hai4h/yolo-human-face-detection.git
-   cd yolo-human-face-detection
-   ```
-
-2. Cài đặt các gói phụ thuộc Python(điều chỉnh theo hệ thống):
-   ```
-   pip install -r ultralytics tensorflow fastapi uvicorn opencv-python
-   ```
-
-3. Tải các mô hình AI vào thư mục `models/`
-
-### 4.3. Cấu hình
-
-Cấu hình hệ thống có thể được điều chỉnh thông qua các file sau:
-
-- `app/config.py`: Cấu hình backend và mô hình AI
-- `frontend/js/config.js`: Cấu hình frontend
-
-## 5. Sử dụng hệ thống
-
-### 5.1. Khởi động máy chủ
-
-```
+6.5. Chạy server
 python run_server.py
-```
 
-Máy chủ sẽ khởi động tại địa chỉ `https://0.0.0.0:8000` với SSL được bật.
+7. 🧬 API Backend
+7.1. Đăng ký khuôn mặt
 
-### 5.2. Truy cập ứng dụng
+POST /enroll_face
+Gửi: image/jpeg hoặc image/png
 
-Mở trình duyệt và truy cập:
-```
-https://localhost:8000
-```
-
-### 5.3. Sử dụng ứng dụng
-
-1. Cho phép truy cập camera khi được yêu cầu
-2. Chọn camera (nếu có nhiều camera)
-3. Nhấn "Bắt đầu Camera" để bắt đầu nhận diện
-4. Sử dụng các tùy chọn hiển thị để điều chỉnh giao diện
-5. Nhấn "Dừng Camera" để dừng nhận diện
-
-## 6. API Backend
-
-### 6.1. Endpoint nhận diện khung hình
-
-- **URL**: `/process_frame`
-- **Method**: POST
-- **Content-Type**: `multipart/form-data`
-- **Parameters**: 
-  - `file`: File hình ảnh JPEG/PNG
-- **Response**: JSON
-
-```json
+Response:
 {
-  "persons": 2,
-  "faces": 1,
-  "person_boxes": [
-    {"coords": [x1, y1, x2, y2], "confidence": 0.95}
-  ],
-  "face_boxes": [
-    {"coords": [x1, y1, x2, y2], "confidence": 0.92, "emotion": "Vui vẻ"}
-  ]
+  "success": true,
+  "message": "Face enrolled successfully"
 }
-```
 
-### 6.2. Endpoint kiểm tra sức khỏe
 
-- **URL**: `/health`
-- **Method**: GET
-- **Response**: JSON
+Hoặc nếu trùng:
 
-```json
 {
-  "status": "ok"
+  "success": false,
+  "message": "Face already exists (similarity > 95%)"
 }
-```
 
-## 7. Mô hình AI
+7.2. Mở tủ bằng khuôn mặt
 
-### 7.1. Mô hình nhận diện người
+POST /unlock
 
-- **Mô hình**: YOLOv11n
-- **Định dạng**: PyTorch (.pt)
-- **Lớp phát hiện**: Person (class 0)
-- **Ngưỡng tin cậy**: 0.3
+Response:
+{
+  "success": true,
+  "user_id": "user123",
+  "message": "Locker unlocked"
+}
 
-### 7.2. Mô hình nhận diện khuôn mặt
 
-- **Mô hình**: YOLOv11n-Face tùy chỉnh
-- **Định dạng**: PyTorch (.pt)
-- **Ngưỡng tin cậy**: 0.3
+Nếu không nhận diện được:
 
-### 7.3. Mô hình nhận diện cảm xúc
+{
+  "success": false,
+  "message": "Face not recognized"
+}
 
-- **Mô hình**: CNN tùy chỉnh
-- **Định dạng**: TensorFlow Lite (.tflite)
-- **Kích thước đầu vào**: 32x32 pixels (grayscale)
-- **Lớp cảm xúc**:
-  - 0: Giận dữ
-  - 1: Ghê tởm
-  - 2: Sợ hãi
-  - 3: Vui vẻ
-  - 4: Buồn bã
-  - 5: Ngạc nhiên
-  - 6: Bình thường
+7.3. Kiểm tra sức khỏe
 
-## 8. Giao diện người dùng
+GET /health
 
-### 8.1. Giao diện Desktop
+{ "status": "ok" }
 
-Giao diện desktop được chia thành ba cột:
-- **Cột trái**: Thống kê (số người, khuôn mặt, cảm xúc)
-- **Cột giữa**: Khung video từ camera
-- **Cột phải**: Bảng điều khiển với các tùy chọn
+8. 🧠 Mô hình AI
+Face Detection
 
-### 8.2. Giao diện Mobile
+YOLOv8n (rút gọn, chỉ lấy layer face)
 
-Giao diện mobile được chia thành các phần theo thứ tự từ trên xuống dưới:
-- **Thống kê**: Hiển thị số lượng và cảm xúc
-- **Video**: Khung hình từ camera
-- **Điều khiển**: Các tùy chọn và nút điều khiển
+Face Embedding
 
-## 9. Xử lý lỗi và gỡ rối
+TensorFlow Lite 256-dim embedding vector
+→ dùng Dot Product + Cosine Similarity so khớp
 
-### 9.1. Lỗi phổ biến
+Ngưỡng nhận diện
 
-- **Không tìm thấy camera**: Kiểm tra quyền truy cập camera trong trình duyệt
-- **Mô hình không tải được**: Kiểm tra đường dẫn mô hình trong `config.py`
-- **Độ trễ cao**: Giảm kích thước khung hình hoặc tốc độ khung hình trong `config.js`
+Đăng ký trùng mặt: similarity ≥ 0.95
 
-### 9.2. Xem nhật ký
+Mở tủ: similarity ≥ 0.95
 
-- Nhật ký backend: Terminal nơi chạy `run_server.py`
-- Nhật ký frontend: Console trong DevTools của trình duyệt
+9. 🛠 Giao diện Web
 
-## 10. Tối ưu hóa hiệu suất
+Có hỗ trợ camera trực tiếp
 
-### 10.1. Tối ưu hóa frontend
+Nút Start Camera
 
-- Giảm `frameRate` trong `config.js` trên thiết bị có hiệu suất thấp
-- Điều chỉnh kích thước khung video để giảm dữ liệu truyền tải
+Nút Enroll Face
 
-### 10.2. Tối ưu hóa backend
+Nút Unlock Locker
 
-- Sử dụng mô hình TensorFlow Lite thay vì mô hình TensorFlow đầy đủ
-- Bật `half=True` khi sử dụng mô hình YOLO để tính toán ở độ chính xác FP16
-- Giảm kích thước ảnh khi xử lý
+Khung hiển thị khuôn mặt đã detect
 
-## 11. Bảo mật
+10. 🛡 Bảo mật
 
-- Hệ thống sử dụng SSL (HTTPS) để mã hóa dữ liệu
-- Dữ liệu video không được lưu trữ
-- Tất cả xử lý đều diễn ra cục bộ trên máy chủ
+Backend chạy HTTPS
+
+Không lưu ảnh (chỉ lưu embedding)
+
+Lưu vector đã chuẩn hóa (không thể khôi phục ảnh gốc)
+
+MongoDB Atlas + mật khẩu được ẩn qua .env
+
+11. 🐞 Debug
+Frontend
+
+F12 → Console
+
+Backend
+
+Terminal chạy FastAPI

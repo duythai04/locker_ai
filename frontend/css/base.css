@@ -1,64 +1,104 @@
 /* Base CSS: Variables, resets, and global styles */
 
 :root {
-    --primary-color: #3498db;
-    --secondary-color: #2ecc71;
-    --accent-color: #e74c3c;
-    --emotion-color: #ff9800;
-    --bg-color: #f8f9fa;
-    --text-color: #333;
-    --border-radius: 8px;
-    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Professional color palette */
+  --primary-color: #2563eb; /* Professional blue */
+  --primary-hover: #1d4ed8; /* Darker blue for hover */
+  --secondary-color: #10b981; /* Professional green */
+  --secondary-hover: #059669;
+  --accent-color: #ef4444; /* Alert red */
+  --bg-color: #f9fafb; /* Light neutral background */
+  --bg-secondary: #ffffff; /* White for cards */
+  --text-primary: #111827; /* Dark text */
+  --text-secondary: #6b7280; /* Medium gray text */
+  --border-color: #e5e7eb; /* Light border */
+  --border-radius: 10px;
+  --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --box-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.12);
+
+  /* Spacing scale */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+
+  /* Typography */
+  --font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --line-height-tight: 1.4;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
 }
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-family);
 }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    padding: 20px;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  padding: var(--spacing-lg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
 }
 
 .hidden {
-    display: none !important;
+  display: none !important;
 }
 
-/* Fancy scrollbar styling */
+/* Scrollbar styling */
 .scrollable::-webkit-scrollbar {
-    width: 4px;
+  width: 6px;
 }
 
 .scrollable::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
+  background: var(--bg-color);
+  border-radius: 10px;
 }
 
 .scrollable::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 10px;
+  background: var(--border-color);
+  border-radius: 10px;
 }
 
 .scrollable::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
+  background: var(--text-secondary);
 }
 
-/* Helper class for scrollable content */
 .scrollable {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Animation keyframes */
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
