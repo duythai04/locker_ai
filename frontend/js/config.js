@@ -1,8 +1,8 @@
 export default {
-  serverUrl: "http://localhost:8000/process_frame",
-  storeUrl: "http://localhost:8000/store",
-  retrieveUrl: "http://localhost:8000/retrieve",
-  lockersSummaryUrl: "http://localhost:8000/lockers/summary",
+  serverUrl: "/process_frame",
+  storeUrl: "/store",
+  retrieveUrl: "/retrieve",
+  lockersSummaryUrl: "/lockers/summary",
   frameRate: 10,
   isMobile: /Android|iPhone|iPad/.test(navigator.userAgent),
   personColor: "#00FF00",
