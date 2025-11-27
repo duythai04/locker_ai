@@ -37,8 +37,8 @@ async function ensureCameraStarted() {
   if (!isStreaming) {
     console.log("📷 Đang bật camera...");
     await startCamera();
-    // Đợi camera ổn định
-    await new Promise(res => setTimeout(res, 800));
+    // Giảm thời gian chờ camera ổn định xuống 300ms
+    await new Promise(res => setTimeout(res, 300));
   }
 }
 
@@ -196,7 +196,7 @@ function captureFrameAsBlob() {
         resolve(blob);
       },
       "image/jpeg",
-      0.9
+      0.7  // Giảm chất lượng xuống 0.7 để giảm kích thước file
     );
   });
 }
@@ -305,8 +305,7 @@ function drawDetections(data) {
       if (config.showConfidence && typeof confidence === "number") {
         labelParts.push(`${(confidence * 100).toFixed(1)}%`);
       }
-      if (emotion) labelParts.push(emotion);
-
+     
       const label = labelParts.join(" | ") || "Face";
 
       const textWidth = ctx.measureText(label).width;
@@ -376,40 +375,41 @@ async function processLoop(timestamp) {
 }
 
 // ================== Handler: Lưu đồ (STORE) ==================
+// ================== Handler: Lưu đồ (STORE) ==================
 async function handleStoreItem() {
+  // Vô hiệu hóa nút để tránh bấm liên tục
+  storeButton.disabled = true;
+
   try {
-    // Vô hiệu hóa nút
-    storeButton.disabled = true;
-    
-    // Bật camera tự động
+    // Bật camera nếu chưa bật
     await ensureCameraStarted();
-    
+
     // Cập nhật trạng thái
     lockerStatusText.textContent = "📷 Đang thu thập khuôn mặt... Vui lòng nhìn thẳng vào camera!";
     lockerIdText.textContent = "-";
     recognizedConfidenceText.textContent = "-";
 
     const NUM_FRAMES = 5;
-    const FRAME_DELAY = 800; // 800ms giữa mỗi frame = ~4-5s tổng
+    const FRAME_DELAY = 400;
     const formData = new FormData();
 
-    // Thu thập 5 frame trong 4-5 giây
+    // Thu thập 5 frame
     for (let i = 0; i < NUM_FRAMES; i++) {
       lockerStatusText.textContent = `📷 Thu thập ảnh ${i + 1}/${NUM_FRAMES}... Giữ nguyên tư thế!`;
-      
+
       const blob = await captureFrameAsBlob();
       if (blob) {
         formData.append("files", blob, `store_${i}.jpg`);
       }
-      
+
       if (i < NUM_FRAMES - 1) {
-        await new Promise(resolve => setTimeout(resolve, FRAME_DELAY));
+        await new Promise((resolve) => setTimeout(resolve, FRAME_DELAY));
       }
     }
 
     // Gửi lên server
     lockerStatusText.textContent = "⏳ Đang xử lý và phân bổ tủ...";
-    
+
     const res = await fetch(config.storeUrl, {
       method: "POST",
       body: formData,
@@ -421,14 +421,16 @@ async function handleStoreItem() {
     lockerStatusText.textContent = data.message;
     lockerIdText.textContent = data.locker_id || "-";
     recognizedConfidenceText.textContent =
-      data.confidence ? data.confidence.toFixed(3) : "-";
+      typeof data.confidence === "number" ? data.confidence.toFixed(3) : "-";
 
     // Cập nhật số tủ trống
     await fetchLockerSummary();
 
-    // Thông báo thành công
+    // Thông báo
     if (data.status === "success") {
-      alert(`✅ ${data.message}\n🔑 Tủ số: ${data.locker_id}\n\nVui lòng ghi nhớ số tủ để lấy đồ sau!`);
+      alert(
+        `✅ ${data.message}\n🔑 Tủ số: ${data.locker_id}\n\nVui lòng ghi nhớ số tủ để lấy đồ sau!`
+      );
     } else {
       alert(`⚠️ ${data.message}`);
     }
@@ -437,31 +439,33 @@ async function handleStoreItem() {
     lockerStatusText.textContent = "❌ Lỗi khi lưu đồ";
     alert("❌ Lỗi khi lưu đồ. Vui lòng thử lại!");
   } finally {
+    // 🔥 Luôn luôn tắt camera sau khi lưu đồ xong (dù success hay error)
+    stopCamera();
     storeButton.disabled = false;
   }
 }
 
 // ================== Handler: Lấy đồ (RETRIEVE) ==================
 async function handleRetrieveItem() {
+  // Vô hiệu hóa nút
+  retrieveButton.disabled = true;
+
   try {
-    // Vô hiệu hóa nút
-    retrieveButton.disabled = true;
-    
-    // Bật camera tự động
+    // Bật camera nếu chưa bật
     await ensureCameraStarted();
-    
+
     // Cập nhật trạng thái
-    lockerStatusText.textContent = "📷 Đang xác thực khuôn mặt... Vui lòng nhìn thẳng vào camera!";
+    lockerStatusText.textContent =
+      "📷 Đang xác thực khuôn mặt... Vui lòng nhìn thẳng vào camera!";
     lockerIdText.textContent = "-";
     recognizedConfidenceText.textContent = "-";
 
-    // Đợi thêm 1 giây để người dùng chuẩn bị
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Đợi nhẹ cho camera ổn định
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Chụp ảnh xác thực
     lockerStatusText.textContent = "📸 Đang chụp và xác thực...";
     const blob = await captureFrameAsBlob();
-    
     if (!blob) {
       throw new Error("Không thể chụp ảnh từ camera");
     }
@@ -471,7 +475,7 @@ async function handleRetrieveItem() {
 
     // Gửi lên server
     lockerStatusText.textContent = "⏳ Đang tìm kiếm tủ của bạn...";
-    
+
     const res = await fetch(config.retrieveUrl, {
       method: "POST",
       body: formData,
@@ -492,7 +496,9 @@ async function handleRetrieveItem() {
 
     // Thông báo kết quả
     if (data.status === "success") {
-      alert(`✅ ${data.message}\n🔓 Tủ số ${data.locker_id} đã được mở!\n🎯 Độ chính xác: ${(data.confidence * 100).toFixed(1)}%`);
+      alert(
+        `✅ ${data.message}\n🔓 Tủ số ${data.locker_id} đã được mở!\n🎯 Độ chính xác: ${(data.confidence * 100).toFixed(1)}%`
+      );
     } else {
       alert(`⚠️ ${data.message}`);
     }
@@ -501,9 +507,12 @@ async function handleRetrieveItem() {
     lockerStatusText.textContent = "❌ Lỗi khi lấy đồ";
     alert("❌ Lỗi khi lấy đồ. Vui lòng thử lại!");
   } finally {
+    // 🔥 Luôn luôn tắt camera sau khi lấy đồ xong (dù success hay error)
+    stopCamera();
     retrieveButton.disabled = false;
   }
 }
+
 
 // ================== Gắn event listeners ==================
 function setupEventListeners() {

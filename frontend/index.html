@@ -31,14 +31,6 @@
                     <span class="stat-label">Số người trong khung hình:</span>
                     <span class="stat-value" id="personCount">0</span>
                 </div>
-
-                <!-- Nếu muốn hiện danh sách face / người, bỏ comment đoạn này -->
-                <!--
-                <div id="detectedPeopleList" class="detected-people-list">
-                    <h4>Khuôn mặt phát hiện:</h4>
-                    <div class="people-list-content"></div>
-                </div>
-                -->
             </div>
         </div>
 
@@ -54,33 +46,16 @@
 
         <!-- Right column: Controls -->
         <div class="controls-section">
-            <!-- Cài đặt camera -->
             <div class="control-group">
                 <h3>Cài đặt camera</h3>
 
-                <!-- Dropdown camera (desktop) -->
                 <div id="cameraSelectContainer">
                     <select id="cameraSelect" class="camera-select">
                         <option value="">Đang tải camera...</option>
                     </select>
                 </div>
-
-                <!-- Toggle camera sau (mobile) -->
-                <!-- <div id="toggleCameraContainer">
-                    <div class="control-row">
-                        <span class="control-label">Camera sau:</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="toggleRearCamera">
-                            <span class="slider"></span>
-                        </label>
-                    </div> -->
-                </div>
-
-                <!-- <button id="startButton" class="button">Bắt đầu Camera</button>
-                <button id="stopButton" class="button secondary" style="margin-top: 10px;">Dừng Camera</button> -->
             </div>
 
-            <!-- Smart Locker controls -->
             <div class="control-group">
                 <h3>Smart Locker</h3>
 
@@ -105,7 +80,6 @@
         <p>© 2025 Smart Locker System using Facial Recognition | Powered by FastAPI & YOLO</p>
     </div>
 
-    <!-- Load JavaScript modules -->
     <script type="module" src="/static/js/main.js"></script>
 </body>
 </html>

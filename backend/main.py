@@ -8,9 +8,10 @@ import os
 import numpy as np
 import cv2
 from typing import List
-from backend.db_utils import lockers_collection  # hoặc export hàm trong db_utils
+
+from backend.db_utils import lockers_collection
 from app.box_detector import Detector
-from backend import db_utils  # Import các hàm từ db_utils.py
+from backend import db_utils
 
 app = FastAPI(
     title="Smart Locker System using Facial Recognition",
@@ -20,14 +21,13 @@ app = FastAPI(
 
 detector = Detector()
 
-# Khởi tạo danh sách tủ nếu cần (ví dụ 10 tủ: L01..L10)
-# Bạn có thể comment dòng này nếu muốn tự init bằng script riêng
-db_utils.init_lockers_if_empty(num_lockers=10)
+# Khởi tạo danh sách tủ nếu cần
+db_utils.init_lockers_if_empty(num_lockers=12)
 
 # ----------------- CORS -----------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Có thể siết lại origin khi deploy
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -50,16 +50,13 @@ class RetrieveResponse(BaseModel):
 
 # Ngưỡng để quyết định cho mở tủ khi LẤY ĐỒ
 UNLOCK_THRESHOLD = 0.93
+# Ngưỡng để coi là "mặt đã có tủ đang gửi đồ"
+EXISTING_FACE_THRESHOLD = 0.95
 
 
-# ----------------- API: process_frame (giữ để debug/thống kê) -----------------
+# ----------------- API: process_frame (debug) -----------------
 @app.post("/process_frame")
 async def process_frame(file: UploadFile = File(...)):
-    """
-    Nhận 1 frame từ camera, detect person & face,
-    trả về bounding boxes + tên khuôn mặt (nếu match DB faces).
-    Dùng cho debug / demo.
-    """
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -115,17 +112,14 @@ async def store_item(
 ):
     """
     Flow LƯU ĐỒ:
-    - Frontend bấm 'Lưu đồ' -> bật camera -> gửi 1 hoặc nhiều frame lên endpoint này.
-    - Backend:
-      + Trích embedding khuôn mặt (có thể lấy trung bình nhiều frame cho ổn định).
-      + Tìm 1 tủ đang 'free'.
-      + Tạo session mới (locker_sessions) gắn với locker đó.
-      + Đánh dấu tủ 'occupied'.
-      + Trả về locker_id để bật tủ & hiển thị cho người dùng.
+    - FE bấm 'Lưu đồ' -> bật camera -> gửi 1 hoặc nhiều frame lên endpoint này.
+    - BE:
+      + Trích embedding khuôn mặt (lấy trung bình nhiều frame).
+      + CHECK: nếu mặt này đã có session active (đang gửi đồ) -> từ chối.
+      + Nếu OK -> tìm tủ free, tạo session, đánh dấu occupied.
     """
 
     uploads: List[UploadFile] = []
-
     if files:
         uploads.extend(files)
     if file is not None:
@@ -136,7 +130,6 @@ async def store_item(
 
     embeddings: list[np.ndarray] = []
 
-    # Lấy embedding từ các frame
     for upload in uploads:
         contents = await upload.read()
         nparr = np.frombuffer(contents, np.uint8)
@@ -166,10 +159,20 @@ async def store_item(
             detail="Không thu được khuôn mặt hợp lệ nào. Hãy thử lại và đảm bảo mặt rõ, đủ sáng.",
         )
 
-    # Trung bình embedding để có vector đại diện ổn định hơn
-    embed_stack = np.stack(embeddings, axis=0)  # shape: (N, D)
+    embed_stack = np.stack(embeddings, axis=0)
     avg_embedding = np.mean(embed_stack, axis=0)
     print(f"[STORE] Collected {len(embeddings)} embeddings, using averaged template.")
+
+    # 🔴 CHECK: mặt này đã có session active chưa?
+    existing_session = db_utils.find_active_session_by_face(avg_embedding)
+    if existing_session and float(existing_session["cosineSim"]) >= EXISTING_FACE_THRESHOLD:
+        locker_id = existing_session["locker_id"]
+        # Trả về 400 để FE show lỗi
+        raise HTTPException(
+            status_code=400,
+            detail=f"Khuôn mặt này đang có đồ tại tủ {locker_id}. "
+                   f"Vui lòng lấy đồ hoặc đóng phiên hiện tại trước khi gửi thêm.",
+        )
 
     # Tìm 1 tủ đang free
     locker = db_utils.find_free_locker()
@@ -189,12 +192,10 @@ async def store_item(
     # Đánh dấu tủ đang bị chiếm
     db_utils.mark_locker_occupied(locker_id=locker_id, session_id=session_id)
 
-    # (Sau này) tại đây có thể gửi lệnh mở tủ locker_id ra phần cứng
-
     return StoreResponse(
         status="granted",
         locker_id=locker_id,
-        confidence=None,  # có thể thêm confidence nếu bạn muốn
+        confidence=None,
         message=f"Tủ {locker_id} đã được cấp. Vui lòng gửi đồ vào tủ.",
     )
 
@@ -204,12 +205,11 @@ async def store_item(
 async def retrieve_item(file: UploadFile = File(...)):
     """
     Flow LẤY ĐỒ:
-    - Frontend bấm 'Lấy đồ' -> bật camera -> gửi 1 frame khuôn mặt hiện tại.
-    - Backend:
+    - FE bấm 'Lấy đồ' -> bật camera -> gửi 1 frame khuôn mặt hiện tại.
+    - BE:
       + Trích embedding khuôn mặt.
-      + Tìm session đang 'active' có cosine similarity cao nhất.
-      + Nếu cosineSim >= UNLOCK_THRESHOLD -> mở tủ đó, đóng session, giải phóng tủ.
-      + Ngược lại -> từ chối.
+      + Tìm session active có cosineSim cao nhất.
+      + Nếu cosineSim >= UNLOCK_THRESHOLD -> mở tủ, đóng session, free locker.
     """
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
@@ -230,7 +230,6 @@ async def retrieve_item(file: UploadFile = File(...)):
             status_code=400, detail="Không trích xuất được embedding khuôn mặt"
         )
 
-    # Tìm session active giống nhất
     best_session = db_utils.find_active_session_by_face(embedding)
 
     if not best_session:
@@ -252,12 +251,10 @@ async def retrieve_item(file: UploadFile = File(...)):
             message="Độ tương đồng khuôn mặt chưa đủ để mở tủ.",
         )
 
-    # Nếu đạt ngưỡng => cho mở tủ, đóng session & free locker
+    # Đủ ngưỡng -> cho mở tủ, đóng session & free locker
     session_id = best_session["session_id"]
     db_utils.close_locker_session(session_id=session_id)
     db_utils.mark_locker_free(locker_id=locker_id)
-
-    # TODO: gửi lệnh mở tủ locker_id ra phần cứng tại đây
 
     return RetrieveResponse(
         status="granted",
@@ -278,24 +275,23 @@ async def lockers_summary():
         "occupied_lockers": occupied,
     }
 
+
 @app.post("/init_lockers")
 async def init_lockers(count: int = 12):
     created = db_utils.create_lockers(count)
     return {
         "requested": count,
         "created": created,
-        "message": f"Đã tạo {created} tủ mới"
+        "message": f"Đã tạo {created} tủ mới",
     }
 
 
-# ----------------- HEALTH CHECK -----------------
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
 
 
 # ----------------- STATIC FRONTEND -----------------
-# Giả định cấu trúc: project_root/frontend/...
 frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
 app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
 
