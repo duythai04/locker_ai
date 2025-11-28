@@ -23,7 +23,7 @@ COPY frontend ./frontend
 COPY models ./models
 
 # Nếu code load model từ root, copy thêm:
-COPY best.pt emotion_model.h5 ./
+COPY best.pt ./
 
 # Nếu cần SSL cert trong container (tùy):
 # COPY ssl ./ssl
