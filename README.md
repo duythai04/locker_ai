@@ -252,5 +252,5 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 
 MIT License - Xem file `LICENSE` để biết thêm chi tiết.
 
-## **10 Dataset **
+## **10. Dataset**
 Dataset được sử dụng trong dự án:  [dataset](https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.kaggle.com%2Fdatasets%2Fawsaf49%2Fcoco-2017-dataset%3Ffbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExZG1aVUhSTVVGclZXSGZNWHNydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR4_No9Q-SLLQFSDabgr5CDEbqf3yeGI8Eu9jfJcfZF1M4_2VwVSjga5NLc0Qw_aem_GZPy0WPya7uXew2SE1TVLg&h=AT05ksTw6Az_v_vwOLdI6bFMe6HcadaY0h8rW1moAFAQR_hvSDMfTO9LaYJyJ_97ZYXISscPXKYNeadOIMGUCHscQVJHRmVcsU7WabwFBOkk6CMbgGmp0Licc7mqWSV-XxQQxW34I5p4aQ)
